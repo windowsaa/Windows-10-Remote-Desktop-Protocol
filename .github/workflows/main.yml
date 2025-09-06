@@ -22,6 +22,14 @@ jobs:
             dir=in action=allow protocol=TCP localport=3389
           Restart-Service -Name TermService -Force
 
+      - name: Disable Password Complexity Policy
+        run: |
+          secedit /export /cfg "$env:TEMP\secpol.cfg"
+          (Get-Content "$env:TEMP\secpol.cfg") -replace "PasswordComplexity = 1", "PasswordComplexity = 0" `
+                                               -replace "MinimumPasswordLength = 8", "MinimumPasswordLength = 1" |
+            Set-Content "$env:TEMP\secpol.cfg"
+          secedit /configure /db secedit.sdb /cfg "$env:TEMP\secpol.cfg" /areas SECURITYPOLICY
+
       - name: Create Users with Easy Passwords
         run: |
           $users = @{
@@ -89,4 +97,3 @@ jobs:
           while ($true) {
               Write-Host "[$(Get-Date)] RDP Active - Use Ctrl+C in workflow to terminate"
               Start-Sleep -Seconds 300
-          }
