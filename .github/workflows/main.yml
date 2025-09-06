@@ -5,7 +5,7 @@ on:
 
 jobs:
   secure-rdp:
-    runs-on: windows-2022
+    runs-on: windows-2025
     timeout-minutes: 3600
 
     steps:
@@ -21,6 +21,17 @@ jobs:
           netsh advfirewall firewall add rule name="RDP-Tailscale" `
             dir=in action=allow protocol=TCP localport=3389
           Restart-Service -Name TermService -Force
+
+      - name: Enable Audio Playback & Redirection
+        run: |
+          Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" `
+                           -Name "fDisableAudioCapture" -Value 0 -Type DWord
+          Start-Service Audiosrv
+          Set-Service Audiosrv -StartupType Automatic
+          Start-Service UmRdpService
+          Set-Service UmRdpService -StartupType Automatic
+          New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Terminal Server Client" `
+                           -Name "AudioQualityMode" -PropertyType DWord -Value 1 -Force
 
       - name: Disable Password Complexity Policy
         run: |
@@ -104,4 +115,3 @@ jobs:
           while ($true) {
               Write-Host "[$(Get-Date)] RDP Active - Use Ctrl+C in workflow to terminate"
               Start-Sleep -Seconds 300
-          }
