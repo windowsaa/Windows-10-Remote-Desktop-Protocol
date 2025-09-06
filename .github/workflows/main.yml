@@ -45,9 +45,16 @@ jobs:
               } else {
                   Set-LocalUser -Name $user -Password $securePass
               }
+          }
 
-              Add-LocalGroupMember -Group "Administrators" -Member $user
-              Add-LocalGroupMember -Group "Remote Desktop Users" -Member $user
+          $groups = @("Administrators", "Remote Desktop Users")
+          foreach ($group in $groups) {
+              foreach ($user in $users.Keys) {
+                  $alreadyInGroup = Get-LocalGroupMember -Group $group | Where-Object { $_.Name -like "*\$user" }
+                  if (-not $alreadyInGroup) {
+                      Add-LocalGroupMember -Group $group -Member $user
+                  }
+              }
           }
 
           echo "RDP_CREDS=runneradmin: 12345678 | installer: 87654321 | RDP: 0987654321" >> $env:GITHUB_ENV
