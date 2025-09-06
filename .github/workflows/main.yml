@@ -1,4 +1,4 @@
-name: RDP
+name: Windows 10 REMOTE DESKTOP PROTOCOL
 
 on:
   workflow_dispatch:
